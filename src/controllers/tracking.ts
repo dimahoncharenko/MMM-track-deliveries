@@ -3,9 +3,9 @@ import logger from "../providers/logger";
 
 type TrackingParams = {
   tracking_docs: {
-      tracking_id: string;
-      phone: string;
-  }[]
+    tracking_id: string;
+    phone: string;
+  }[];
 };
 
 interface NovaPoshtaTrackingDocument {
@@ -136,10 +136,10 @@ class TrackingController {
       const payload = {
         ...template_payload,
         methodProperties: {
-          Documents: tracking_docs.map(doc => ({
+          Documents: tracking_docs.map((doc) => ({
             DocumentNumber: doc.tracking_id,
-            Phone: doc.phone,
-          }))
+            Phone: doc.phone || process.env.DEFAULT_TRACK_PHONE,
+          })),
         },
       };
 

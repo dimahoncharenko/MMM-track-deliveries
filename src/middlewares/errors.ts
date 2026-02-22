@@ -1,13 +1,8 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import axios from "axios";
 import logger from "../providers/logger";
 
-export const errorsHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const errorsHandler = (err: any, _: Request, res: Response) => {
   let status = err.status || 500;
   let message = err.message || "Internal Server Error";
   const stack = process.env.NODE_ENV === "development" ? err.stack : undefined;
