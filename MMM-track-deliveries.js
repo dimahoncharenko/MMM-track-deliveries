@@ -1,13 +1,17 @@
+const dotenv = require("dotenv");
+
+dotenv.config();
+
 Module.register("MMM-track-deliveries", {
   defaults: {
-    apiUrl: "http://localhost:8080/api/track",
+    apiUrl: `http://localhost:${process.env.PORT}/api/tracking`,
     updateInterval: 10 * 60 * 1000,
-    phone: "",
-    trackId: "",
+    trackingDocs: [],
   },
 
   start: function () {
     this.trackingData = null;
+    Log.info(`GET_TRACKING_DATA is triggered ${JSON.stringify(this.config)}`);
     this.sendSocketNotification("GET_TRACKING_DATA", { config: this.config });
 
     setInterval(() => {
@@ -80,7 +84,7 @@ Module.register("MMM-track-deliveries", {
 
   notificationReceived: function (notification, payload) {
     if (notification === "TRACK_NEW_PARCEL") {
-      console.log("Отримано нову ТТН від бота:", payload.number);
+      Log.info(`Отримано нову ТТН від бота: ${payload.number}`);
       this.sendSocketNotification("ADD_TRACKING_NUMBER", payload);
     }
   },

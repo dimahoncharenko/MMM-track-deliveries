@@ -2,10 +2,13 @@ const NodeHelper = require("node_helper");
 const axios = require("axios");
 const { spawn } = require("child_process");
 const path = require("path");
+const Log = require("logger");
 
 module.exports = NodeHelper.create({
+  parcels: [],
+
   start: function () {
-    console.log("Starting Express server for MMM-track-deliveries...");
+    Log.info("Starting Express server for MMM-track-deliveries...");
 
     this.expressServer = spawn(
       "node",
@@ -17,29 +20,47 @@ module.exports = NodeHelper.create({
     );
 
     this.expressServer.on("close", (code) => {
-      console.log(`Express server exited with code ${code}`);
+      Log.info(`Express server exited with code ${code}`);
     });
   },
+
   stop: function () {
     if (this.expressServer) {
       this.expressServer.kill();
     }
   },
-  socketNotificationReceived: (notification, payload) => {
+
+  socketNotificationReceived: function (notification, payload) {
     if (notification === "GET_TRACKING_DATA") {
+      if (payload.config.trackId) {
+        this.fetchTracking(payload.config.apiUrl, payload.config.trackingDocs);
+      }
     }
   },
-  fetchTracking: async (config) => {
+
+  fetchTracking: async function (url, trackingDocs) {
     try {
-      const response = await axios.post(config.apiUrl, {
-        track_id: config.trackId,
-        phone: config.phone,
+      const response = await axios.post(url, {
+        trackingDocs
       });
 
-      this.sendSocketNotification("TRACKING_RESULT", response.data);
+      if (response.data && response.data.data) {
+        const newParcels = response.data.data;
+        
+        newParcels.forEach(np => {
+          const existing = this.parcels.findIndex(p => p.Number === np.Number);
+          if (existing !== -1) {
+            this.parcels[existing] = np;
+          } else {
+            this.parcels.push(np);
+          }
+        });
+
+        this.sendSocketNotification("TRACKING_RESULT", { data: this.parcels });
+      }
     } catch (err) {
-      console.error("Error fetching tracking:", error);
-      this.sendSocketNotification("TRACKING_ERROR", error.message);
+      Log.info("Error fetching tracking:", err.message);
+      this.sendSocketNotification("TRACKING_ERROR", err.message);
     }
   },
 });

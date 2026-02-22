@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
 import logger from "../providers/logger";
 
-type TrackParams = {
-  track_id: string;
-  phone: string;
+type TrackingParams = {
+  tracking_docs: {
+      tracking_id: string;
+      phone: string;
+  }[]
 };
 
 interface NovaPoshtaTrackingDocument {
@@ -128,18 +130,16 @@ type TrackResponse = {
   infoCodes: string[];
 };
 
-class TrackController {
-  async track({ track_id, phone }: TrackParams) {
+class TrackingController {
+  async trackList({ tracking_docs }: TrackingParams) {
     try {
       const payload = {
         ...template_payload,
         methodProperties: {
-          Documents: [
-            {
-              DocumentNumber: track_id,
-              Phone: phone,
-            },
-          ],
+          Documents: tracking_docs.map(doc => ({
+            DocumentNumber: doc.tracking_id,
+            Phone: doc.phone,
+          }))
         },
       };
 
@@ -155,10 +155,10 @@ class TrackController {
       const data = response.data;
 
       if (data.data[0].StatusCode === "3") {
-        logger.info(`Номер накладної не знайдено: ${track_id}`);
+        logger.info("Номери накладних не знайдено");
         return {
           success: false,
-          messageCodes: ["Номер накладної не знайдено"],
+          messageCodes: ["Номери накладних не знайдено"],
         };
       }
 
@@ -195,4 +195,4 @@ const template_payload = {
   },
 };
 
-export default new TrackController();
+export default new TrackingController();
