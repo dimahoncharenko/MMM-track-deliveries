@@ -4,8 +4,6 @@ const { spawn } = require("child_process");
 const path = require("path");
 const Log = require("logger");
 
-console.log('[node_helper] PROCESS: ', process.env);
-
 module.exports = NodeHelper.create({
   parcels: [],
 
@@ -42,15 +40,20 @@ module.exports = NodeHelper.create({
 
   fetchTracking: async function (trackingDocs) {
     try {
-      const response = await axios.post(`http://localhost:${process.env.PORT}/api/tracking`, {
-        trackingDocs
-      });
+      const response = await axios.post(
+        `http://localhost:${process.env.PORT}/api/tracking`,
+        {
+          trackingDocs,
+        }
+      );
 
       if (response.data && response.data.data) {
         const newParcels = response.data.data;
-        
-        newParcels.forEach(np => {
-          const existing = this.parcels.findIndex(p => p.Number === np.Number);
+
+        newParcels.forEach((np) => {
+          const existing = this.parcels.findIndex(
+            (p) => p.Number === np.Number
+          );
           if (existing !== -1) {
             this.parcels[existing] = np;
           } else {
