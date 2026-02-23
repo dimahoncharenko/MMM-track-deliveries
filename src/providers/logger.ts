@@ -35,8 +35,6 @@ const transports = [
   new winston.transports.File({ filename: "logs/all.log" }),
 ];
 
-console.log("ENV: ", process.env.NODE_ENV);
-
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === "development" ? "debug" : "warn",
   levels,

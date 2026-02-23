@@ -132,8 +132,6 @@ type TrackResponse = {
 
 class TrackingController {
   async trackList({ trackingDocs }: TrackingParams) {
-    logger.debug(`PROCCESS (trackList): ${process.env.DEFAULT_TRACK_PHONE}`);
-
     try {
       const payload = {
         apiKey: process.env.NP_APP_KEY,
@@ -147,28 +145,13 @@ class TrackingController {
         },
       };
 
-      logger.debug(`Is about to track the parcels ${trackingDocs}`);
-
       const response = await axios.post<TrackResponse>(
         `${process.env.NP_API_URL}`,
         payload
       );
 
       const data = response.data;
-
-      if (data.data[0].StatusCode === "3") {
-        logger.info("Номери накладних не знайдено");
-        return {
-          success: false,
-          messageCodes: ["Номери накладних не знайдено"],
-        };
-      }
-
-      logger.debug(
-        `Received an info about the parcel: ${JSON.stringify(response.data)}`
-      );
-
-      return response.data;
+      return data;
     } catch (err) {
       logger.error(`Failed retrieving parcel data: ${JSON.stringify(err)}`);
 
