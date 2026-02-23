@@ -11,7 +11,7 @@ Module.register("MMM-track-deliveries", {
 
   start: function () {
     this.trackingData = null;
-    Log.info(`GET_TRACKING_DATA is triggered ${JSON.stringify(this.config)}`);
+    Log.debug(`GET_TRACKING_DATA is triggered ${JSON.stringify(this.config)}`);
     this.sendSocketNotification("GET_TRACKING_DATA", { config: this.config });
 
     setInterval(() => {

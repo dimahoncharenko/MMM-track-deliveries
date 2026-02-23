@@ -2,8 +2,8 @@ import axios, { AxiosError } from "axios";
 import logger from "../providers/logger";
 
 type TrackingParams = {
-  tracking_docs: {
-    tracking_id: string;
+  trackingDocs: {
+    trackingId: string;
     phone: string;
   }[];
 };
@@ -131,21 +131,23 @@ type TrackResponse = {
 };
 
 class TrackingController {
-  async trackList({ tracking_docs }: TrackingParams) {
+  async trackList({ trackingDocs }: TrackingParams) {
+    logger.debug(`PROCCESS (trackList): ${process.env.DEFAULT_TRACK_PHONE}`);
+
     try {
       const payload = {
-        ...template_payload,
+        apiKey: process.env.NP_APP_KEY,
+        modelName: "TrackingDocument",
+        calledMethod: "getStatusDocuments",
         methodProperties: {
-          Documents: tracking_docs.map((doc) => ({
-            DocumentNumber: doc.tracking_id,
+          Documents: trackingDocs.map((doc) => ({
+            DocumentNumber: doc.trackingId,
             Phone: doc.phone || process.env.DEFAULT_TRACK_PHONE,
           })),
         },
       };
 
-      logger.info(
-        `Is about to track the parcel ${payload.methodProperties.Documents[0].DocumentNumber}`
-      );
+      logger.debug(`Is about to track the parcels ${trackingDocs}`);
 
       const response = await axios.post<TrackResponse>(
         `${process.env.NP_API_URL}`,
@@ -162,7 +164,7 @@ class TrackingController {
         };
       }
 
-      logger.info(
+      logger.debug(
         `Received an info about the parcel: ${JSON.stringify(response.data)}`
       );
 
@@ -180,19 +182,5 @@ class TrackingController {
     }
   }
 }
-
-const template_payload = {
-  apiKey: process.env.NP_APP_KEY,
-  modelName: "TrackingDocument",
-  calledMethod: "getStatusDocuments",
-  methodProperties: {
-    Documents: [
-      {
-        DocumentNumber: "",
-        Phone: "",
-      },
-    ],
-  },
-};
 
 export default new TrackingController();
