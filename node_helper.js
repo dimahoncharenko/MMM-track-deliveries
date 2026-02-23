@@ -4,6 +4,8 @@ const { spawn } = require("child_process");
 const path = require("path");
 const Log = require("logger");
 
+console.log('[node_helper] PROCESS: ', process.env);
+
 module.exports = NodeHelper.create({
   parcels: [],
 
@@ -14,7 +16,7 @@ module.exports = NodeHelper.create({
       "node",
       [path.join(__dirname, "dist/server.js")],
       {
-        shell: true,
+        shell: false,
         stdio: "inherit",
       }
     );
@@ -32,15 +34,15 @@ module.exports = NodeHelper.create({
 
   socketNotificationReceived: function (notification, payload) {
     if (notification === "GET_TRACKING_DATA") {
-      if (payload.config.trackId) {
-        this.fetchTracking(payload.config.apiUrl, payload.config.trackingDocs);
+      if (payload.config.trackingDocs?.length) {
+        this.fetchTracking(payload.trackingDocs);
       }
     }
   },
 
-  fetchTracking: async function (url, trackingDocs) {
+  fetchTracking: async function (trackingDocs) {
     try {
-      const response = await axios.post(url, {
+      const response = await axios.post(`http://localhost:${process.env.PORT}/api/tracking`, {
         trackingDocs
       });
 

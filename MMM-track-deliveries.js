@@ -84,8 +84,8 @@ Module.register("MMM-track-deliveries", {
 
   notificationReceived: function (notification, payload) {
     if (notification === "TRACK_NEW_PARCEL") {
-      Log.info(`Отримано нову ТТН від бота: ${payload.number}`);
-      this.sendSocketNotification("ADD_TRACKING_NUMBER", payload);
+      Log.info(`Отримано нові ТТН від бота: ${payload.trackingDocs}`);
+      this.sendSocketNotification("GET_TRACKING_DATA", payload);
     }
   },
 
