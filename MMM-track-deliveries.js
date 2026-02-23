@@ -1,17 +1,11 @@
-const dotenv = require("dotenv");
-
-dotenv.config();
-
 Module.register("MMM-track-deliveries", {
   defaults: {
-    apiUrl: `http://localhost:${process.env.PORT}/api/tracking`,
     updateInterval: 10 * 60 * 1000,
-    trackingDocs: [],
   },
 
   start: function () {
     this.trackingData = null;
-    Log.debug(`GET_TRACKING_DATA is triggered ${JSON.stringify(this.config)}`);
+    this.config.apiUrl = `http://localhost:${this.config.port}/api/tracking`;
     this.sendSocketNotification("GET_TRACKING_DATA", { config: this.config });
 
     setInterval(() => {
