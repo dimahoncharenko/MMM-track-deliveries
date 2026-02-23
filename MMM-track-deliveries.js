@@ -83,7 +83,7 @@ Module.register("MMM-track-deliveries", {
   },
 
   notificationReceived: function (notification, payload) {
-    Log.info(
+    console.log(
       `[notificationReceived] ${notification} ${JSON.stringify(payload.trackingDocs)}`
     );
     if (notification === "TRACK_NEW_PARCEL") {
