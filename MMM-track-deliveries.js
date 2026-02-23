@@ -70,6 +70,9 @@ Module.register("MMM-track-deliveries", {
   },
 
   socketNotificationReceived: function (notification, payload) {
+    Log.info(
+      `[socketNotificationReceived] ${notification} ${JSON.stringify(payload)}`
+    );
     if (notification === "TRACKING_RESULT") {
       this.trackingData = payload;
       this.updateDom();
