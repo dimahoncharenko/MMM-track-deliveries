@@ -1,13 +1,30 @@
 .track-container {
-  text-align: left;
   max-width: 350px;
 }
 
+.parcel-list {
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.parcel-list::-webkit-scrollbar {
+  display: none;
+}
+
 .parcel-card {
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
   border-bottom: 1px solid #333;
-  animation: fadeIn 1s ease-in-out;
+  opacity: 0;
+  animation: parcelSlideIn 0.5s ease forwards;
+}
+
+.parcel-card.exit {
+  animation: parcelSlideOut 0.5s ease forwards;
 }
 
 .parcel-card:last-child {
@@ -47,6 +64,17 @@
 
 .parcel-footer {
   font-style: italic;
+}
+
+@keyframes parcelSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes fadeIn {

@@ -27,9 +27,14 @@ Module.register("MMM-track-deliveries", {
       return wrapper;
     }
 
+    const listWrapper = document.createElement("div");
+    listWrapper.className = "parcel-list";
+
     this.trackingData.data.forEach((item) => {
       const parcelCard = document.createElement("div");
       parcelCard.className = "parcel-card";
+
+      parcelCard.style.animationDelay = index * 0.15 + "s";
 
       const header = document.createElement("div");
       header.className = "parcel-header bright small";
@@ -63,9 +68,10 @@ Module.register("MMM-track-deliveries", {
       footer.innerHTML = `<i class="fa fa-calendar-alt"></i> Очікується: ${date}`;
       parcelCard.appendChild(footer);
 
-      wrapper.appendChild(parcelCard);
+      listWrapper.appendChild(parcelCard);
     });
 
+    wrapper.appendChild(listWrapper);
     return wrapper;
   },
 
