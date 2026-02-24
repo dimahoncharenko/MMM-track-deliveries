@@ -61,6 +61,7 @@
 
 .parcel-footer {
   font-style: italic;
+  text-align: left;
 }
 
 @keyframes parcelSlideIn {

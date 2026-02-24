@@ -32,9 +32,6 @@ module.exports = NodeHelper.create({
 
   socketNotificationReceived: function (notification, payload) {
     if (notification === "GET_TRACKING_DATA") {
-      Log.debug(
-        `[socketNotificationReceived] GET_TRACKING_DATA is triggered ${JSON.stringify(payload.trackingDocs)}`
-      );
       if (payload.trackingDocs?.length) {
         this.fetchTracking(payload.trackingDocs);
       }
