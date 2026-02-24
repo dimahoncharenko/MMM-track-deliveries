@@ -6,7 +6,7 @@ Module.register("MMM-track-deliveries", {
   },
 
   start: function () {
-    this.trackingData = null;
+    this.trackingData = { data: [] };
     this.config.apiUrl = `http://localhost:${this.config.port}/api/tracking`;
     this.scrollDirection = 1;
 
