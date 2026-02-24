@@ -1,16 +1,33 @@
 Module.register("MMM-track-deliveries", {
   defaults: {
     updateInterval: 10 * 60 * 1000,
+    ttl: 40 * 1000,
+    maxHeight: "400px",
   },
 
   start: function () {
     this.trackingData = null;
     this.config.apiUrl = `http://localhost:${this.config.port}/api/tracking`;
-    this.sendSocketNotification("GET_TRACKING_DATA", { config: this.config });
+    this.scrollDirection = 1;
 
     setInterval(() => {
-      this.sendSocketNotification("GET_TRACKING_DATA", { config: this.config });
-    }, this.config.updateInterval);
+      this.checkExpiry();
+    }, 1000);
+  },
+
+  checkExpiry: function () {
+    if (!this.trackingData.data.length) return;
+
+    const now = Date.now();
+    const originalLength = this.trackingData.data.length;
+
+    this.trackingData.data = this.trackingData.data.filter((item) => {
+      return now - item.addedAt < this.config.ttl;
+    });
+
+    if (this.trackingData.data.length !== originalLength) {
+      this.updateDom(500);
+    }
   },
 
   getDom: function () {
@@ -35,6 +52,10 @@ Module.register("MMM-track-deliveries", {
       parcelCard.className = "parcel-card";
 
       parcelCard.style.animationDelay = (index + 1) * 0.5 + "s";
+
+      if (Date.now() - item.addedAt > this.config.ttl - 2000) {
+        parcelCard.classList.add("exit");
+      }
 
       const header = document.createElement("div");
       header.className = "parcel-header bright small";
@@ -76,18 +97,41 @@ Module.register("MMM-track-deliveries", {
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.info(
-      `[socketNotificationReceived] ${notification} ${JSON.stringify(payload)}`
-    );
     if (notification === "TRACKING_RESULT") {
+      const now = Date.now();
+
+      payload?.data?.forEach((item) => {
+        if (!item.addedAt) item.addedAt = now;
+      });
+
       this.trackingData = payload;
       this.updateDom();
+
+      setTimeout(() => this.initAutoScroll(), 2000);
     }
+  },
+
+  initAutoScroll: function () {
+    const container = document.querySelector(".parcel-list");
+    if (!container || container.scrollHeight <= container.clientHeight) return;
+
+    if (this.scrollTimer) clearInterval(this.scrollTimer);
+
+    this.scrollTimer = setInterval(() => {
+      const maxScroll = container.scrollHeight - container.clientHeight;
+
+      if (container.scrollTop >= maxScroll) this.scrollDirection = -1;
+      if (container.scrollTop <= 0) this.scrollDirection = 1;
+
+      container.scrollBy({
+        top: this.scrollDirection * 1,
+        behavior: "smooth",
+      });
+    }, 50);
   },
 
   notificationReceived: function (notification, payload) {
     if (notification === "TRACK_NEW_PARCEL" && payload?.trackingDocs) {
-      Log.info(`Отримано нові ТТН від бота: ${payload.trackingDocs}`);
       this.sendSocketNotification("GET_TRACKING_DATA", payload);
     }
   },
