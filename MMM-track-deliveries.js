@@ -17,10 +17,6 @@ Module.register("MMM-track-deliveries", {
     const wrapper = document.createElement("div");
     wrapper.className = "track-container";
 
-    Log.info(
-      `Received trackingData: ${JSON.stringify(this.trackingData?.data)}`
-    );
-
     if (
       !this.trackingData ||
       !this.trackingData.data ||
@@ -34,7 +30,7 @@ Module.register("MMM-track-deliveries", {
     const listWrapper = document.createElement("div");
     listWrapper.className = "parcel-list";
 
-    this.trackingData.data.forEach((item) => {
+    this.trackingData.data.forEach((item, index) => {
       const parcelCard = document.createElement("div");
       parcelCard.className = "parcel-card";
 
@@ -74,8 +70,6 @@ Module.register("MMM-track-deliveries", {
 
       listWrapper.appendChild(parcelCard);
     });
-
-    Log.debug(`Is about to render the markup: ${listWrapper}`);
 
     wrapper.appendChild(listWrapper);
     return wrapper;
