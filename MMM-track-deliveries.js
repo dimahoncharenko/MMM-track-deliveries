@@ -17,6 +17,10 @@ Module.register("MMM-track-deliveries", {
     const wrapper = document.createElement("div");
     wrapper.className = "track-container";
 
+    Log.info(
+      `Received trackingData: ${JSON.stringify(this.trackingData?.data)}`
+    );
+
     if (
       !this.trackingData ||
       !this.trackingData.data ||
@@ -34,7 +38,7 @@ Module.register("MMM-track-deliveries", {
       const parcelCard = document.createElement("div");
       parcelCard.className = "parcel-card";
 
-      parcelCard.style.animationDelay = index * 0.15 + "s";
+      parcelCard.style.animationDelay = (index + 1) * 0.5 + "s";
 
       const header = document.createElement("div");
       header.className = "parcel-header bright small";
@@ -70,6 +74,8 @@ Module.register("MMM-track-deliveries", {
 
       listWrapper.appendChild(parcelCard);
     });
+
+    Log.debug(`Is about to render the markup: ${listWrapper}`);
 
     wrapper.appendChild(listWrapper);
     return wrapper;
