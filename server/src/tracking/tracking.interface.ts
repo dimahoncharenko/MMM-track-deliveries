@@ -111,7 +111,7 @@ interface NovaPoshtaTrackingDocument {
 export interface TrackingParams {
   trackingDocs: {
     trackingId: string;
-    phone: string;
+    phone?: string;
   }[];
 }
 
