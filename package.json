@@ -17,7 +17,8 @@
     "start": "cd server && npm start",
     "dev": "cd server && npm run start:dev",
     "build": "cd server && npm run build",
-    "lint": "cd server && npm run lint"
+    "lint": "cd server && npm run lint",
+    "test": "cd server && npm test"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
