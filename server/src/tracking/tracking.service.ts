@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { Tracking, TrackingParams } from './tracking.interface';
@@ -32,15 +32,23 @@ export class TrackingService {
       const data = response.data;
       return data;
     } catch (err) {
-      this.logger.error(
-        `Failed retrieving parcel data: ${JSON.stringify(err)}`,
-      );
+      this.logger.error(`Failed retrieving parcels data: ${err}`);
 
       if (err instanceof AxiosError) {
-        throw {
-          status: err.response?.status,
-          message: err.response?.data || err.response?.statusText,
-        };
+        const status =
+          err.response?.status ||
+          err.status ||
+          HttpStatus.INTERNAL_SERVER_ERROR;
+        const data = err.response?.data;
+
+        const message =
+          data?.message ||
+          data ||
+          err.response?.statusText ||
+          err.message ||
+          'An unexpected error occurred';
+
+        throw new HttpException(message, status);
       }
       throw err;
     }
