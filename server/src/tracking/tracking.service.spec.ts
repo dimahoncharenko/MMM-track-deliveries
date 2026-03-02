@@ -1,22 +1,18 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import { HttpService } from '@nestjs/axios';
+import { of, throwError } from 'rxjs';
+import { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import { Tracking, TrackingParams } from './tracking.interface';
 import { TrackingService } from './tracking.service';
 import { TrackingController } from './tracking.controller';
-import { AxiosError } from 'axios';
-import { HttpException } from '@nestjs/common';
-
-jest.mock('axios', () => ({
-  AxiosError: jest.requireActual('axios').AxiosError,
-  post: jest.fn(),
-}));
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('TrackingService', () => {
   let service: TrackingService;
   let controller: TrackingController;
+  let httpService: HttpService;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -25,15 +21,18 @@ describe('TrackingService', () => {
         TrackingService,
         {
           provide: ConfigService,
-          useValue: { get: jest.fn() },
+          useValue: { get: jest.fn((key: string) => key) },
+        },
+        {
+          provide: HttpService,
+          useValue: { post: jest.fn() },
         },
       ],
     }).compile();
 
     service = moduleRef.get(TrackingService);
     controller = moduleRef.get(TrackingController);
-
-    mockedAxios.post.mockRestore();
+    httpService = moduleRef.get(HttpService);
   });
 
   it('controller correctly calls a service method: findAll', async () => {
@@ -56,95 +55,52 @@ describe('TrackingService', () => {
     expect(findAllSpy).toHaveBeenCalledWith(payload);
   });
 
-  it('controller throws an error in case of absent trackingId', async () => {
-    const payload: any = {
-      trackingDocs: [
-        {
-          phone: '380111111111',
-        },
-      ],
+  it('findAll returns data on success', async () => {
+    const payload: TrackingParams = {
+      trackingDocs: [{ trackingId: '1' }],
+    };
+    const mockData = { success: true, data: [] } as any;
+    const response: AxiosResponse<Tracking> = {
+      data: mockData,
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as InternalAxiosRequestConfig,
     };
 
-    mockedAxios.post.mockResolvedValue({
-      data: { success: true, data: [] },
-    });
+    jest.spyOn(httpService, 'post').mockReturnValue(of(response));
 
-    const controllerSpy = jest.spyOn(controller, 'findAll');
-    await controller.findAll(payload);
-
-    expect(controllerSpy).toThrow();
+    const result = await service.findAll(payload);
+    expect(result).toEqual(mockData);
   });
 
-  it(`controller doesn't throws an error in case of absent phone`, async () => {
+  it('findAll throws HttpException on response error', async () => {
     const payload: TrackingParams = {
-      trackingDocs: [
-        {
-          trackingId: '1',
-        },
-      ],
+      trackingDocs: [{ trackingId: '1' }],
     };
-
-    mockedAxios.post.mockResolvedValue({
-      data: { success: true, data: [] },
-    });
-
-    const controllerSpy = jest.spyOn(controller, 'findAll');
-    await controller.findAll(payload);
-
-    expect(controllerSpy).toThrow();
-  });
-
-  it(`findAll throws a correct error in case of request failure`, async () => {
-    const payload: TrackingParams = {
-      trackingDocs: [
-        {
-          trackingId: '1',
-        },
-      ],
-    };
-
-    const mockAxiosError = new AxiosError(
-      'Request failed with status code 400',
-      'ERR_BAD_REQUEST',
-      {} as InternalAxiosRequestConfig,
-      {},
-      {
-        status: 400,
-        statusText: 'Wrong URL',
-        data: { message: 'Wrong URL' },
-        headers: {},
-        config: {} as InternalAxiosRequestConfig,
+    const errorResponse = {
+      response: {
+        status: 404,
+        data: { message: 'Not Found' },
       },
-    );
-
-    mockedAxios.post.mockRejectedValue(mockAxiosError);
-
-    try {
-      await service.findAll(payload);
-    } catch (err) {
-      expect(err).toEqual(new HttpException('Wrong URL', 400));
-    }
-  });
-
-  it(`findAll throws a correct error in case of unexpected error`, async () => {
-    const payload: TrackingParams = {
-      trackingDocs: [
-        {
-          trackingId: '1',
-        },
-      ],
     };
 
-    const mockAxiosError = new AxiosError();
+    jest.spyOn(httpService, 'post').mockReturnValue(throwError(() => errorResponse));
 
-    mockedAxios.post.mockRejectedValue(mockAxiosError);
+    await expect(service.findAll(payload)).rejects.toThrow(
+      new HttpException('Not Found', 404),
+    );
+  });
 
-    try {
-      await service.findAll(payload);
-    } catch (err) {
-      expect(err).toEqual(
-        new HttpException('An unexpected error occurred', 400),
-      );
-    }
+  it('findAll throws unexpected error if no response is present', async () => {
+    const payload: TrackingParams = {
+      trackingDocs: [{ trackingId: '1' }],
+    };
+
+    jest.spyOn(httpService, 'post').mockReturnValue(throwError(() => new Error('Network Error')));
+
+    await expect(service.findAll(payload)).rejects.toThrow(
+      new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR),
+    );
   });
 });

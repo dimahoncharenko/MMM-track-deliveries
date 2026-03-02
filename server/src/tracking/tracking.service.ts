@@ -1,56 +1,58 @@
-import axios, { AxiosError } from 'axios';
+import { firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { Tracking, TrackingParams } from './tracking.interface';
+import { NovaPoshtaPayload, Tracking, TrackingParams } from './tracking.interface';
 
 @Injectable()
 export class TrackingService {
   private readonly logger = new Logger(TrackingService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) { }
 
   async findAll({ trackingDocs }: TrackingParams): Promise<Tracking> {
     try {
-      const payload = {
-        apiKey: this.configService.get('NP_APP_KEY'),
+      const payload: NovaPoshtaPayload = {
+        apiKey: this.configService.get<string>('NP_APP_KEY') || '',
         modelName: 'TrackingDocument',
         calledMethod: 'getStatusDocuments',
         methodProperties: {
           Documents: trackingDocs.map((doc) => ({
             DocumentNumber: doc.trackingId,
-            Phone: doc.phone || this.configService.get('DEFAULT_TRACK_PHONE'),
+            Phone:
+              doc.phone ||
+              this.configService.get<string>('DEFAULT_TRACK_PHONE') ||
+              '',
           })),
         },
       };
 
-      const response = await axios.post<Tracking>(
-        `${this.configService.get('NP_API_URL')}`,
-        payload,
+      const { data } = await firstValueFrom(
+        this.httpService.post<Tracking>(
+          this.configService.get<string>('NP_API_URL') || '',
+          payload,
+        ),
       );
 
-      const data = response.data;
       return data;
     } catch (err) {
-      this.logger.error(`Failed retrieving parcels data: ${err}`);
+      this.logger.error(`Failed retrieving parcels data: ${err.message || err}`);
 
-      if (err instanceof AxiosError) {
-        const status =
-          err.response?.status ||
-          err.status ||
-          HttpStatus.INTERNAL_SERVER_ERROR;
-        const data = err.response?.data;
-
+      if (err.response) {
+        const { status, data } = err.response;
         const message =
-          data?.message ||
-          data ||
-          err.response?.statusText ||
-          err.message ||
-          'An unexpected error occurred';
-
+          data?.message || data || 'An unexpected error occurred';
         throw new HttpException(message, status);
       }
-      throw err;
+
+      throw new HttpException(
+        'An unexpected error occurred',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

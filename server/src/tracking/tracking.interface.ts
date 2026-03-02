@@ -108,6 +108,18 @@ interface NovaPoshtaTrackingDocument {
   LoyaltyCardRecipient: string;
 }
 
+export interface NovaPoshtaPayload {
+  apiKey: string;
+  modelName: string;
+  calledMethod: string;
+  methodProperties: {
+    Documents: {
+      DocumentNumber: string;
+      Phone: string;
+    }[];
+  };
+}
+
 export interface TrackingParams {
   trackingDocs: {
     trackingId: string;
