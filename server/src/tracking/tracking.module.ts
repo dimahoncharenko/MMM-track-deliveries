@@ -7,4 +7,4 @@ import { TrackingController } from './tracking.controller';
   controllers: [TrackingController],
   providers: [TrackingService],
 })
-export class TrackingModule {}
+export class TrackingModule { }

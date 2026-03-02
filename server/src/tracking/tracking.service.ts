@@ -40,7 +40,7 @@ export class TrackingService {
 
       return data;
     } catch (err) {
-      this.logger.error(`Failed retrieving parcels data: ${err.message || err}`);
+      this.logger.error(`Failed retrieving parcels data: ${JSON.stringify(err.message || err)}`);
 
       if (err.response) {
         const { status, data } = err.response;
